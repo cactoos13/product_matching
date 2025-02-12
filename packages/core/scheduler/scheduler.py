@@ -67,7 +67,8 @@ class Scheduler(Celery):
             backend=config.get_result_backend(),
             timezone=config.get_timezone(),
             broker_connection_retry_on_startup=False,
-            task_track_started=True
+            task_track_started=True,
+            result_extended=True,
         )
 
         self.celery.conf.task_serializer = config.get_task_serializer()

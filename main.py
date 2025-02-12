@@ -1,12 +1,9 @@
 from bootstrap import bootstrap
-from packages.business.modules.advertisement import AdvertisementModule
 from packages.core.registry import Registry
 from packages.core.scheduler import Scheduler
+from modules import Modules
 
-modules = [
-    AdvertisementModule
-]
-bootstrap(total=True, modules=modules)
 
+bootstrap(total=True, modules=Modules)
 scheduler = Registry().get(Scheduler)
 scheduler = scheduler.get_app()

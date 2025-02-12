@@ -1,6 +1,5 @@
 from sqlalchemy import String, DateTime
 from sqlalchemy.orm import Mapped, mapped_column
-
 from packages.core.entity import SqlEntity
 
 

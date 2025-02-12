@@ -25,14 +25,14 @@ class BusinessModule(Module):
             if issubclass(repository, SqlRepository):
                 Registry().register(
                     repository,
-                    repository(self.entities[idx], sql_connector)
+                    repository[self.entities[idx]](self.entities[idx], sql_connector)
                 )
 
     def install_services(self, services):
         for idx, service in enumerate(services):
             Registry().register(
                 service,
-                service(Registry().get(self.repositories[idx]))
+                service[self.repositories[idx]](Registry().get(self.repositories[idx]))
             )
 
     def install_periodic_tasks(self, periodic_tasks):
