@@ -20,8 +20,6 @@ services:
         hard: 65536
     networks:
         - elk
-
-
   kibana:
     image: kibana:7.13.4
     platform: linux/x86_64
@@ -34,7 +32,6 @@ services:
       - elasticsearch
     networks:
       - elk
-
   mysql:
     image: artifactory.digikala.com/docker/mysql:8
     volumes:
@@ -45,6 +42,15 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: root
       TZ: Asia/Tehran
+  redis:
+    image: redis:latest  # Pull the latest Redis image
+    container_name: redis-server  # Name the container
+    ports:
+      - "6379:6379"  # Expose Redis on the default port (6379)
+    volumes:
+      - redis-data:/data  # Persistent volume for Redis data
+    restart: always  # Ensure Redis always restarts if it crashes or the machine reboots
+
 
 networks:
   elk:
@@ -54,5 +60,6 @@ volumes:
     elastic_data: {}
     mysql_data: {}
     mysql_logs: {}
+    redis-data: {}
 
 

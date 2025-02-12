@@ -2,11 +2,10 @@ from abc import ABC
 from typing import Self, Type
 
 from packages.core.entity import Entity
-from packages.core.install import Installable, Installer
-from packages.core.repository import SqlRepository, Repository
+from packages.core.install import Installable
+from packages.core.repository import Repository
 from packages.core.scheduler.task import PeriodicTask
 from packages.core.service import Service
-
 
 
 class Module(Installable, ABC):

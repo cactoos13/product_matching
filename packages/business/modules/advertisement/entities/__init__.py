@@ -1,2 +1,1 @@
 from .advertisement_entity import Advertisement
-from .c2c_advertisement_entity import C2CAdvertisement

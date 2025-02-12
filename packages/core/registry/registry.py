@@ -1,5 +1,4 @@
 from typing import Self, Type, TypeVar
-from packages.core.install import Installable
 from packages.core.utils.singleton import SingletonMeta
 
 T = TypeVar('T')

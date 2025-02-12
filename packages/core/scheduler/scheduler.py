@@ -1,7 +1,7 @@
-from typing import Self
+import importlib
+from typing import Self, Type
 from celery import Celery
 
-from packages.core.install import Installable
 from packages.core.scheduler.task import PeriodicTask
 
 
@@ -14,27 +14,27 @@ class SchedulerConfig:
         self.accept_content = ['json']
         self.timezone = 'GMT'
 
-    def set_broker_url(self, url)-> Self:
+    def set_broker_url(self, url) -> Self:
         self.broker_url = url
         return self
 
-    def set_result_backend(self, url)-> Self:
+    def set_result_backend(self, url) -> Self:
         self.result_backend = url
         return self
 
-    def set_task_serializer(self, serializer)-> Self:
+    def set_task_serializer(self, serializer) -> Self:
         self.task_serializer = serializer
         return self
 
-    def set_result_serializer(self, serializer)-> Self:
+    def set_result_serializer(self, serializer) -> Self:
         self.result_serializer = serializer
         return self
 
-    def set_accept_content(self, content)-> Self:
+    def set_accept_content(self, content) -> Self:
         self.accept_content = content
         return self
 
-    def set_timezone(self, timezone)-> Self:
+    def set_timezone(self, timezone) -> Self:
         self.timezone = timezone
         return self
 
@@ -57,7 +57,6 @@ class SchedulerConfig:
         return self.timezone
 
 
-
 class Scheduler(Celery):
 
     def __init__(self, config: SchedulerConfig):
@@ -66,7 +65,11 @@ class Scheduler(Celery):
             "task_scheduler",
             broker=config.get_broker_url(),
             backend=config.get_result_backend(),
+            timezone=config.get_timezone(),
+            broker_connection_retry_on_startup=False,
+            task_track_started=True
         )
+
         self.celery.conf.task_serializer = config.get_task_serializer()
         self.celery.conf.result_serializer = config.get_result_serializer()
         self.celery.conf.accept_content = config.get_accept_content()
@@ -75,15 +78,15 @@ class Scheduler(Celery):
     def get_app(self):
         return self.celery
 
-
-    def register_periodic_task(self, task: PeriodicTask):
-        self.celery.conf.beat_schedule = {
-            task.task_name: {
-                "task": task.run,
-                "schedule": task.schedule,
-                "args": task.task_args,
-            },
+    def register_periodic_task(self, task: Type[PeriodicTask]):
+        registering_task = task()
+        self.get_app().register_task(registering_task)
+        self.get_app().conf.beat_schedule = {
+            registering_task.get_name(): {
+                'task': registering_task.get_name(),
+                'schedule': registering_task.get_schedule(),
+                'args': registering_task.get_args(),
+                'kwargs': registering_task.get_kwargs()
+            }
         }
-
-
-
+        return self

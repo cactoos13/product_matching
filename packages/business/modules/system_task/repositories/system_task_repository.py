@@ -1,4 +1,5 @@
+from packages.core.repository import SqlRepository
 
 
-class SystemTaskRepository:
+class SystemTaskRepository(SqlRepository):
     pass

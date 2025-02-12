@@ -1,27 +1,38 @@
 from abc import abstractmethod, ABC
-from typing import Self
 from celery.schedules import crontab
 
+from celery import Task as CeleryTask
+class Task(CeleryTask, ABC):
 
-class Task:
-    def __init__(
-        self,
-        task_name: str = None,
-        task_args: tuple = None,
-    ):
-        self.task_name = task_name
-        self.task_args = task_args
-        self.kwargs = None
+    @property
+    def name(self):
+        return self.get_name()
 
     @abstractmethod
-    def run(self):
+    def get_name(self)-> str:
+        pass
+
+
+    @abstractmethod
+    def get_args(self)-> tuple:
+        pass
+
+    @abstractmethod
+    def get_kwargs(self)-> dict:
+        pass
+
+
+    @abstractmethod
+    def run(self, *args, **kwargs):
         pass
 
 
 
 
 class PeriodicTask(Task, ABC):
-    def __init__(self, schedule: crontab):
-        super().__init__()
-        self.schedule = schedule
+
+    @abstractmethod
+    def get_schedule(self)-> crontab:
+        pass
+
 

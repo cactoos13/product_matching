@@ -1,9 +1,11 @@
 [tool.poetry]
-name = "pindo-productmatching"
+name = "pindo_productmatching"
 version = "0.1.0"
 description = ""
 authors = ["AmirHossein Advari <amiradvari@gmail.com>"]
 readme = "README.md"
+package-mode = true
+packages = [{ include = "scripts" }]
 
 [tool.poetry.dependencies]
 python = "^3.11"
@@ -13,14 +15,21 @@ datasketch = "^1.6.5"
 sqlalchemy = "^2.0.37"
 alembic = "^1.14.1"
 pyyaml = "^6.0.2"
-celery = "^5.4.0"
+celery = { version = "^5.4.0", extras = ["redis"] }
 eventlet = "^0.39.0"
 pymysql = "^1.1.1"
 sqlalchemy-celery-beat = "^0.8.0"
 python-dotenv = "^1.0.1"
 colorlog = "^6.9.0"
+mysql-connector-python = "^9.2.0"
+redis = "^5.2.1"
+billiard = "^4.2.1"
 
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+
+[tool.poetry.scripts]
+start = "scripts:start_app"
