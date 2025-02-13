@@ -24,6 +24,9 @@ colorlog = "^6.9.0"
 mysql-connector-python = "^9.2.0"
 redis = "^5.2.1"
 billiard = "^4.2.1"
+joblib = "^1.4.2"
+numpy = "^2.2.3"
+scikit-learn = "1.5.2"
 
 
 [build-system]

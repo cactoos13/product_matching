@@ -1,15 +1,30 @@
+from packages.business.modules.advertisement.services import AdvertisementSqlService
 from packages.core.module import Module
 from packages.core.registry import Registry
 from packages.core.scheduler import SchedulerConfig, Scheduler
 from packages.core.sql_connector import SqlConnectorConfig, SqlConnector
 from redis import Redis
 from datasketch import MinHashLSH
+from sklearn.feature_extraction.text import CountVectorizer
+import joblib
 
 import pymysql
 pymysql.install_as_MySQLdb()
 import os
 import dotenv
 dotenv.load_dotenv()
+
+#
+# def register_vectorizer():
+#     vectorizer_path = os.getenv('VECTORIZER_PATH')
+#     if not vectorizer_path:
+#         raise Exception('VECTORIZER_PATH must be set in environment variables')
+#     if  os.path.exists(vectorizer_path):
+#         vectorizer = joblib.load(vectorizer_path)
+#         Registry().register(CountVectorizer, vectorizer)
+#     print("Vectorizer created")
+#
+
 
 def register_index_redis():
     host = os.getenv('LSH_REDIS_HOST')
@@ -47,6 +62,7 @@ def register_lsh():
                     'port': os.getenv('LSH_REDIS_PORT'),
                     'db': int(db),
                 },
+                'basename': b'minhash',
                 'key': 'minhash'
             }
         )
@@ -103,6 +119,7 @@ def bootstrap(
         index_redis: bool = False,
         lsh: bool = False,
         scheduler: bool = False,
+        vectorizer: bool = False,
         total: bool = False,
 ):
 
@@ -116,5 +133,9 @@ def bootstrap(
         register_index_redis()
     if lsh or total:
         register_lsh()
+    if vectorizer or total:
+        register_vectorizer()
     if modules:
         register_modules(modules)
+
+

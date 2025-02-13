@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Type
+from typing import Type, List
 
 from packages.business.modules.advertisement.entities import Advertisement
 from packages.core.repository import SqlRepository
@@ -7,6 +7,7 @@ from packages.core.sql_connector import SqlConnector
 
 
 class AdvertisementSqlRepository(SqlRepository[Advertisement]):
+
     def __init__(self, entity: Type[Advertisement], sql_connector: SqlConnector):
         super().__init__(entity, sql_connector)
 
@@ -22,21 +23,6 @@ class AdvertisementSqlRepository(SqlRepository[Advertisement]):
             .count()
         )
 
-    def get_changed_ads(
-            self,
-            start_date: datetime,
-            end_date: datetime,
-            page: int,
-            offset: int
-    ) -> [Advertisement]:
-        return (
-            self.get_session()
-            .query(self.entity)
-            .filter(self.entity.changed_at >= start_date, self.entity.changed_at <= end_date)
-            .offset(offset)
-            .limit(page)
-            .all()
-        )
 
 
     def get_not_lsh_indexed_ads_count(self) -> int:
@@ -47,25 +33,24 @@ class AdvertisementSqlRepository(SqlRepository[Advertisement]):
             .count()
         )
 
-
     def get_not_lsh_indexed_ads(
             self,
-            page: int,
+            limit: int,
             offset: int
-    ) -> [Advertisement]:
-        return (
-            self.get_session()
-            .query(self.entity)
-            .filter(self.entity.lsh_indexed == False)
+    )-> List[Type[Advertisement]]:
+        session = self.get_session()
+        result = (
+            session.query(self.entity)
+            .filter(self.entity.lsh_indexed == 0)
             .offset(offset)
-            .limit(page)
+            .limit(limit)
             .all()
         )
+        session.close()
+        return result
 
-
-    def index_ads_batch(self, ads: [Advertisement]):
+    def index_ads_batch(self, ads: List[Advertisement]):
         for ad in ads:
             ad.lsh_indexed = True
         self.save_all(ads)
         return ads
-

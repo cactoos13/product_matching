@@ -1,11 +1,11 @@
 # Test your FastAPI endpoints
 
-GET http://127.0.0.1:8000/
+GET http://127.0.0.1:8000/find
 Accept: application/json
+Content-Type: application/json
 
+{
+    "text":  "   دریا  A-345 وزن  6 "
+}
 ###
 
-GET http://127.0.0.1:8000/hello/User
-Accept: application/json
-
-###

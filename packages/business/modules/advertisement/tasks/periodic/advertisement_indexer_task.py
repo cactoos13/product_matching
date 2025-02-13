@@ -15,7 +15,7 @@ class AdvertisementIndexerTask(PeriodicTask):
 
     def get_schedule(self) -> crontab:
         return crontab(
-            minute='*/20',
+            minute='*',
             nowfun=datetime.now
         )
 
@@ -46,17 +46,22 @@ class AdvertisementIndexerTask(PeriodicTask):
         sys_task = sys_task_service.save(sys_task)
 
         print("Indexing ads...")
-        batch = 1000
+        batch = 100
         ad_redis_service = Registry().get(AdvertisementRedisService)
-        for i in range(0, not_indexed_count, batch):
-            ads = ad_service.get_not_lsh_indexed_ads(i, batch)
+        for i in range(0, 200, batch):
+            ads = ad_service.get_not_lsh_indexed_ads(batch, i)
+            if len(ads) == 0:
+                break
+            ad_indexes = []
+            for ad in ads:
+                title = ad.title
+                description = ad.description
+                text = title
+                ad_indexes.append(AdvertisementIdx(ad.id, text))
             print(f"Indexing {len(ads)} ads")
-            ad_redis_service.index_ads(
-                [AdvertisementIdx(ad.id, ad.text) for ad in ads]
-            )
+            ad_redis_service.index_ads(ad_indexes)
             ad_service.index_ads(ads)
             print(f"Indexed {len(ads)} ads")
-
         sys_task.status = SystemTaskStatusEnum.DONE
         sys_task.done_at = datetime.now()
         sys_task_service.update(sys_task)

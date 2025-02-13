@@ -1,4 +1,4 @@
-from typing import Type, TypeVar, Generic
+from typing import Type, TypeVar, Generic, List
 from sqlalchemy.orm import Session
 from packages.core.entity import SqlEntity
 from packages.core.repository import Repository
@@ -27,7 +27,7 @@ class SqlRepository(Repository[T]):
         return entity
 
 
-    def get_all(self)-> [T]:
+    def get_all(self)-> List[T]:
         session = self.get_session()
         result = session.query(self.entity).all()
         session.close()
@@ -52,14 +52,14 @@ class SqlRepository(Repository[T]):
         session.close()
         return res
 
-    def get_by(self, **kwargs)-> [T]:
+    def get_by(self, **kwargs)-> List[T]:
         session = self.get_session()
         result = session.query(self.entity).filter_by(**kwargs).all()
         session.close()
         return result
 
 
-    def save_all(self, entities: [T])-> [T]:
+    def save_all(self, entities: List[T])-> List[T]:
         session = self.get_session()
         for entity in entities:
             session.add(entity)

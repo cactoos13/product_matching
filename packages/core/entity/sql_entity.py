@@ -10,7 +10,7 @@ class Base(DeclarativeBase):
 
 class SqlEntity(Base, Entity):
     __abstract__ = True
-    id: Mapped[Integer] = mapped_column(Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
     created_at : Mapped[datetime] = mapped_column(DateTime, nullable=False, default=func.now(), index=True)
     updated_at : Mapped[datetime] = mapped_column(DateTime, nullable=False, default=func.now(), onupdate=func.now(), index=True)
 

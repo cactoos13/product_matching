@@ -1,4 +1,6 @@
 import datetime
+from typing import Type
+
 from packages.business.modules.advertisement.entities import Advertisement
 from packages.business.modules.advertisement.repositories import AdvertisementSqlRepository
 from packages.core.service.sql_service import SqlService
@@ -29,10 +31,10 @@ class AdvertisementSqlService(SqlService[Advertisement]):
 
     def get_not_lsh_indexed_ads(
             self,
-            page: int,
+            limit: int,
             offset: int
-    ):
-        return self.repository.get_not_lsh_indexed_ads(page, offset)
+    ) -> list[Type[Advertisement]]:
+        return self.repository.get_not_lsh_indexed_ads(limit, offset)
 
 
     def index_ads(self, ads: [Advertisement]):

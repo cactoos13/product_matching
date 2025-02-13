@@ -1,3 +1,5 @@
+from typing import List
+
 from packages.business.modules.advertisement.entities import AdvertisementIdx
 from packages.business.modules.advertisement.repositories import AdvertisementRedisRepository
 from packages.core.service.redis_service import RedisService
@@ -9,7 +11,7 @@ class AdvertisementRedisService(RedisService[AdvertisementIdx]):
         self.repository = repository
 
 
-    def index_ads(self, ads: [AdvertisementIdx]):
+    def index_ads(self, ads: List[AdvertisementIdx]):
         return self.repository.save_all(ads)
 
 
