@@ -1,1 +1,2 @@
 from .advertisement_sql_repository import AdvertisementSqlRepository
+from .advertisement_redis_repository import AdvertisementRedisRepository

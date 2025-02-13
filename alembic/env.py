@@ -26,7 +26,7 @@ if config.config_file_name is not None:
 
 # add your model's MetaData object here
 # for 'autogenerate' support
-from packages.core.entity.sqlentity import SqlEntity
+from packages.core.entity.sql_entity import SqlEntity
 
 target_metadata = SqlEntity.metadata
 

@@ -3,7 +3,7 @@ from datetime import datetime
 
 from sqlalchemy import String, Enum, Integer, DateTime
 from sqlalchemy.orm import Mapped, mapped_column
-from packages.core.entity.sqlentity import SqlEntity
+from packages.core.entity.sql_entity import SqlEntity
 
 
 class AdvertisementStatusEnum(enum.Enum):

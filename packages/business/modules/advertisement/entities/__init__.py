@@ -1,1 +1,2 @@
 from .advertisement_entity import Advertisement
+from .advertisement_idx_entity import AdvertisementIdx

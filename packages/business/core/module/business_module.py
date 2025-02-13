@@ -28,6 +28,11 @@ class BusinessModule(Module):
                     repository,
                     repository(self.entities[idx], sql_connector)
                 )
+            else:
+                Registry().register(
+                    repository,
+                    repository()
+                )
 
     def install_services(self, services):
         for idx, service in enumerate(services):

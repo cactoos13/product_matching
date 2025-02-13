@@ -1,2 +1,3 @@
 from .entity import Entity
-from .sqlentity import SqlEntity
+from .sql_entity import SqlEntity
+from .redis_entity import RedisEntity
