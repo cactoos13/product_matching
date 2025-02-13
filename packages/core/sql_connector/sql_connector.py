@@ -60,7 +60,7 @@ class SqlConnector:
         self.driver = sql_connector_config.driver
         self.engine = create_engine(
             self.get_connection_string(self.driver),
-            echo=True
+            echo=False
         )
         self.Session = sessionmaker(
             bind=self.engine,
@@ -71,6 +71,10 @@ class SqlConnector:
 
     def get_session(self):
         return self.Session()
+
+    def get_engine(self):
+        return self.engine
+
 
 
     def get_connection_string(self, driver: str)-> str:

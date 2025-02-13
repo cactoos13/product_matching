@@ -13,6 +13,7 @@ class BusinessModule(Module):
             self.install_repositories(self.repositories)
             self.install_services(self.services)
             self.install_periodic_tasks(self.periodic_tasks)
+            self.install_tasks(self.tasks)
         else:
             raise ValueError('The number of entities, services and repositories must be equal')
 
@@ -25,18 +26,23 @@ class BusinessModule(Module):
             if issubclass(repository, SqlRepository):
                 Registry().register(
                     repository,
-                    repository[self.entities[idx]](self.entities[idx], sql_connector)
+                    repository(self.entities[idx], sql_connector)
                 )
 
     def install_services(self, services):
         for idx, service in enumerate(services):
             Registry().register(
                 service,
-                service[self.repositories[idx]](Registry().get(self.repositories[idx]))
+                service(Registry().get(self.repositories[idx]))
             )
 
     def install_periodic_tasks(self, periodic_tasks):
         for periodic_task in periodic_tasks:
             (Registry().get(Scheduler).register_periodic_task(periodic_task))
+
+
+    def install_tasks(self, tasks):
+        for task in tasks:
+            (Registry().get(Scheduler).register_async_task(task))
 
 

@@ -25,9 +25,9 @@ class Product(SqlEntity):
     __tablename__ = 'products'
 
     status: Mapped[ProductStatusEnum] = mapped_column(Enum(ProductStatusEnum), nullable=False, default= ProductStatusEnum.MARKETABLE, index=True)
-    title: Mapped[String] = mapped_column(String(1000), nullable=False)
-    description: Mapped[String] = mapped_column(String(4000), nullable=False)
-    moderation_status: Mapped[String] = mapped_column(Enum(ProductModerationStatusEnum), nullable=False)
+    title: Mapped[str] = mapped_column(String(1000), nullable=False)
+    description: Mapped[str] = mapped_column(String(4000), nullable=False)
+    moderation_status: Mapped[ProductModerationStatusEnum] = mapped_column(Enum(ProductModerationStatusEnum), nullable=False)
     active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
 

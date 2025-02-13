@@ -1,8 +1,8 @@
-import importlib
-from typing import Self, Type
+from typing import Self
 from celery import Celery
-
-from packages.core.scheduler.task import PeriodicTask
+from celery.canvas import Signature
+from celery import group
+from packages.core.scheduler.task import PeriodicTask, Task
 
 
 class SchedulerConfig:
@@ -79,8 +79,25 @@ class Scheduler(Celery):
     def get_app(self):
         return self.celery
 
-    def register_periodic_task(self, task: Type[PeriodicTask]):
-        registering_task = task()
+
+    def run_task(self, task: Task):
+        self.get_app().send_task(
+            task.get_name(),
+            args=task.get_args(),
+            kwargs=task.get_kwargs()
+        )
+
+
+
+
+
+    def register_async_task(self, task: Task):
+        registering_task = task
+        self.get_app().register_task(registering_task)
+        return self
+
+    def register_periodic_task(self, task: PeriodicTask):
+        registering_task = task
         self.get_app().register_task(registering_task)
         self.get_app().conf.beat_schedule = {
             registering_task.get_name(): {
@@ -91,3 +108,4 @@ class Scheduler(Celery):
             }
         }
         return self
+

@@ -1,18 +1,20 @@
-from celery import Celery, Task
+from typing import TypeVar, Generic
 
-# Step 1: Create the Celery app
-app = Celery(
-    'my_app',
-    broker='redis://localhost:6379/0',
-    backend='redis://localhost:6379/0'
-)
+T = TypeVar('T')
 
 
-@app.task(name='my_task')
-def my_task_instance(self, *args, **kwargs):
-    print("Hello from my_task_instance")
-    print("Args:", args)
-    print("Kwargs:", kwargs)
-    return "Task executed successfully"
+class A(Generic[T]):
+    def __init__(self, entity: T):
+        self.entity = entity
 
-my_task_instance.delay(1, 2, 3, name="John Doe")
+    def get_entity(self) -> T:
+        return self.entity
+
+
+class B(A[T]):
+    def __init__(self, entity: T):
+        super().__init__(entity)
+
+
+
+B[int](1)

@@ -1,30 +1,33 @@
 import enum
-from sqlalchemy import String, Enum, Integer
+from datetime import datetime
+
+from sqlalchemy import String, Enum, Integer, DateTime
 from sqlalchemy.orm import Mapped, mapped_column
 from packages.core.entity.sqlentity import SqlEntity
 
 
 class AdvertisementStatusEnum(enum.Enum):
+    DRAFT = 'draft'
     PENDING = 'pending'
-    APPROVED = 'approved'
+    PENDING_AFTER_APPROVE = 'pending_after_approve'
     REJECTED = 'rejected'
-    PENDING_AFTER_APPROVED = 'pending_after_approved'
+    APPROVED = 'approved'
     USER_REPORTED = 'user_reported'
     USER_DELETED = 'user_deleted'
     EXPIRED = 'expired'
     RESERVED = 'reserved'
     SOLD = 'sold'
     DEPRECATED = 'deprecated'
-    DRAFT = 'draft'
 
 class Advertisement(SqlEntity):
     __tablename__ = 'advertisement'
 
-
     status: Mapped[AdvertisementStatusEnum] = mapped_column(Enum(AdvertisementStatusEnum), nullable=False, default= AdvertisementStatusEnum.PENDING, index=True)
-    title: Mapped[String] = mapped_column(String(1000), nullable=False)
-    description: Mapped[String] = mapped_column(String(4000), nullable=False)
-    product_id: Mapped[Integer] = mapped_column(Integer, nullable=True)
+    title: Mapped[str] = mapped_column(String(1000), nullable=False)
+    description: Mapped[str | None] = mapped_column(String(4000), nullable=True)
+    product_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    changed_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+
 
     def __repr__(self):
         return f'<{self.__class__.__name__} {self.id}>'

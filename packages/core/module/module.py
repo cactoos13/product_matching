@@ -4,7 +4,7 @@ from typing import Self, Type
 from packages.core.entity import Entity
 from packages.core.install import Installable
 from packages.core.repository import Repository
-from packages.core.scheduler.task import PeriodicTask
+from packages.core.scheduler.task import PeriodicTask, Task
 from packages.core.service import Service
 
 
@@ -14,15 +14,16 @@ class Module(Installable, ABC):
     def __init__(self, name: str):
         self.name = name
         self.entities: [Type[Entity]] = []
-        self.periodic_tasks : [Type[PeriodicTask]] = []
         self.services: [Type[Service]] = []
         self.repositories: [Type[Repository]] = []
+        self.periodic_tasks : [PeriodicTask] = []
+        self.tasks: [Task] = []
 
     def add_entity(self, entity: Type[Entity])-> Self:
         self.entities.append(entity)
         return self
 
-    def add_periodic_task(self, periodic_task: Type[PeriodicTask])-> Self:
+    def add_periodic_task(self, periodic_task: PeriodicTask)-> Self:
         self.periodic_tasks.append(periodic_task)
         return self
 
@@ -32,6 +33,11 @@ class Module(Installable, ABC):
 
     def add_repository(self, repository: Type[Repository])-> Self:
         self.repositories.append(repository)
+        return self
+
+
+    def add_task(self, task: Task)-> Self:
+        self.tasks.append(task)
         return self
 
 

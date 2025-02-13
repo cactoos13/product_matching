@@ -4,6 +4,24 @@ from celery.schedules import crontab
 from celery import Task as CeleryTask
 class Task(CeleryTask, ABC):
 
+
+    def __init__(
+            self,
+            *args,
+            **kwargs
+    ):
+        self.args = args
+        self.kwargs = kwargs
+        super().__init__()
+
+
+    def get_args(self):
+        return self.args
+
+    def get_kwargs(self):
+        return self.kwargs
+
+
     @property
     def name(self):
         return self.get_name()
@@ -11,16 +29,6 @@ class Task(CeleryTask, ABC):
     @abstractmethod
     def get_name(self)-> str:
         pass
-
-
-    @abstractmethod
-    def get_args(self)-> tuple:
-        pass
-
-    @abstractmethod
-    def get_kwargs(self)-> dict:
-        pass
-
 
     @abstractmethod
     def run(self, *args, **kwargs):
@@ -34,5 +42,7 @@ class PeriodicTask(Task, ABC):
     @abstractmethod
     def get_schedule(self)-> crontab:
         pass
+
+
 
 

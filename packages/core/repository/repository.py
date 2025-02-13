@@ -1,3 +1,8 @@
+from typing import Type, Generic, TypeVar
+from packages.core.entity import Entity
 
-class Repository:
-    pass
+T = TypeVar('T', bound=Entity)
+
+class Repository(Generic[T]):
+    def __init__(self, entity: Type[T]):
+        self.entity = entity
