@@ -2,7 +2,7 @@ from datetime import datetime
 
 from celery.schedules import crontab
 
-from packages.business.modules.advertisement.entities import Advertisement, AdvertisementIdx
+from packages.business.modules.advertisement.entities import AdvertisementIdx
 from packages.business.modules.advertisement.services import AdvertisementSqlService
 from packages.business.modules.advertisement.services.advertisement_redis_service import AdvertisementRedisService
 from packages.business.modules.system_task.entities import SystemTask, SystemTaskTypeEnum, SystemTaskStatusEnum
