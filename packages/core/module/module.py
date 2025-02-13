@@ -16,14 +16,14 @@ class Module(Installable, ABC):
         self.entities: [Type[Entity]] = []
         self.services: [Type[Service]] = []
         self.repositories: [Type[Repository]] = []
-        self.periodic_tasks : [PeriodicTask] = []
-        self.tasks: [Task] = []
+        self.periodic_tasks : [Type[PeriodicTask]] = []
+        self.tasks: [Type[Task]] = []
 
     def add_entity(self, entity: Type[Entity])-> Self:
         self.entities.append(entity)
         return self
 
-    def add_periodic_task(self, periodic_task: PeriodicTask)-> Self:
+    def add_periodic_task(self, periodic_task: Type[PeriodicTask])-> Self:
         self.periodic_tasks.append(periodic_task)
         return self
 
@@ -36,7 +36,7 @@ class Module(Installable, ABC):
         return self
 
 
-    def add_task(self, task: Task)-> Self:
+    def add_task(self, task: Type[Task])-> Self:
         self.tasks.append(task)
         return self
 

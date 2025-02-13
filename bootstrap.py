@@ -3,25 +3,54 @@ from packages.core.registry import Registry
 from packages.core.scheduler import SchedulerConfig, Scheduler
 from packages.core.sql_connector import SqlConnectorConfig, SqlConnector
 from redis import Redis
+from datasketch import MinHashLSH
+
 import pymysql
 pymysql.install_as_MySQLdb()
 import os
 import dotenv
 dotenv.load_dotenv()
 
-
 def register_index_redis():
-    host = os.getenv('INDEX_REDIS_HOST')
-    port = os.getenv('INDEX_REDIS_PORT')
-    db = os.getenv('INDEX_REDIS_DB')
+    host = os.getenv('LSH_REDIS_HOST')
+    port = os.getenv('LSH_REDIS_PORT')
+    db = os.getenv('LSH_REDIS_DB')
     if host is None or port is None or db is None:
-        raise Exception('INDEX_REDIS_HOST, INDEX_REDIS_PORT, INDEX_REDIS_DB must be set in environment variables')
+        raise Exception('LSH_REDIS_HOST, LSH_REDIS_PORT, LSH_REDIS_DB must be set in environment variables')
     Registry().register(Redis, Redis(
         host = host,
         port = int(port),
         db = int(db),
         decode_responses=True
     ))
+def register_lsh():
+    threshold = os.getenv('LSH_SIMILARITY_THRESHOLD')
+    if threshold is None:
+        raise Exception('LSH_THRESHOLD must be set in environment variables')
+
+    perms = os.getenv('LSH_PERMUTATIONS')
+    if perms is None:
+        raise Exception('LSH_PERMUTATIONS must be set in environment variables')
+
+    db = os.getenv('LSH_REDIS_DB')
+    if db is None:
+        raise Exception('LSH_REDIS_DB must be set in environment variables')
+    Registry().register(
+        MinHashLSH,
+        MinHashLSH(
+            threshold= float(threshold),
+            num_perm= int(perms),
+            storage_config={
+                'type': 'redis',
+                'redis': {
+                    'host': os.getenv('LSH_REDIS_HOST'),
+                    'port': os.getenv('LSH_REDIS_PORT'),
+                    'db': int(db),
+                },
+                'key': 'minhash'
+            }
+        )
+    )
 def register_source_sql_connector():
     source_config = SqlConnectorConfig(
         config_dict={
@@ -67,12 +96,12 @@ def register_modules(modules: list[Module]):
         module.install()
         Registry().register(module.__class__, module)
 
-
 def bootstrap(
         modules: list[Module] = None,
         source_sql_connector: bool = False,
         des_sql_connector: bool = False,
         index_redis: bool = False,
+        lsh: bool = False,
         scheduler: bool = False,
         total: bool = False,
 ):
@@ -85,5 +114,7 @@ def bootstrap(
         register_scheduler()
     if index_redis or total:
         register_index_redis()
+    if lsh or total:
+        register_lsh()
     if modules:
         register_modules(modules)

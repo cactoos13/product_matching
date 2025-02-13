@@ -87,10 +87,6 @@ class Scheduler(Celery):
             kwargs=task.get_kwargs()
         )
 
-
-
-
-
     def register_async_task(self, task: Task):
         registering_task = task
         self.get_app().register_task(registering_task)

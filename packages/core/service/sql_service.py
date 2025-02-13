@@ -34,3 +34,6 @@ class SqlService(Service[T]):
 
     def get_by(self, **kwargs)-> [T]:
         return self.get_repository().get_by(**kwargs)
+
+
+

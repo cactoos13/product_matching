@@ -10,6 +10,7 @@ class SystemTaskTypeEnum(enum.Enum):
     SYNCHRONIZE_ADS = 'synchronize_ads'
     SYNCHRONIZE_ADS_WORKER = 'synchronize_ads_worker'
     SYNCHRONIZE_PRODUCTS_WORKER = 'synchronize_products_worker'
+    INDEX_ADVERTISEMENTS = 'index_advertisements'
 
 
 class SystemTaskStatusEnum(enum.Enum):

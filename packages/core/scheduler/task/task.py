@@ -4,7 +4,6 @@ from celery.schedules import crontab
 from celery import Task as CeleryTask
 class Task(CeleryTask, ABC):
 
-
     def __init__(
             self,
             *args,

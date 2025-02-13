@@ -1,7 +1,8 @@
-from typing import Generic, TypeVar, Type
+from typing import Generic, TypeVar
 
 from packages.core.entity import Entity
 from packages.core.repository import Repository
+
 
 T = TypeVar('T', bound=Entity)
 class Service(Generic[T]):

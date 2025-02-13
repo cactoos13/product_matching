@@ -23,7 +23,6 @@ class SqlRepository(Repository[T]):
         session.add(entity)
         session.commit()
         session.refresh(entity)
-        print(entity.id)
         session.close()
         return entity
 
@@ -59,6 +58,14 @@ class SqlRepository(Repository[T]):
         session.close()
         return result
 
+
+    def save_all(self, entities: [T])-> [T]:
+        session = self.get_session()
+        for entity in entities:
+            session.add(entity)
+        session.commit()
+        session.close()
+        return entities
 
 
 

@@ -1,7 +1,7 @@
 import enum
 from datetime import datetime
 
-from sqlalchemy import String, Enum, Integer, DateTime
+from sqlalchemy import String, Enum, Integer, DateTime, Boolean
 from sqlalchemy.orm import Mapped, mapped_column
 from packages.core.entity.sql_entity import SqlEntity
 
@@ -27,6 +27,7 @@ class Advertisement(SqlEntity):
     description: Mapped[str | None] = mapped_column(String(4000), nullable=True)
     product_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
     changed_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    lsh_indexed: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, index=True)
 
 
     def __repr__(self):

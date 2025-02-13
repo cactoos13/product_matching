@@ -1,8 +1,10 @@
 from packages.core.module import Module
 from packages.core.registry.registry import Registry
 from packages.core.repository import SqlRepository
+from packages.core.repository.redis_repository import RedisRepository
 from packages.core.scheduler import Scheduler
 from packages.core.sql_connector import SqlConnector
+from redis import Redis
 
 
 class BusinessModule(Module):
@@ -28,10 +30,14 @@ class BusinessModule(Module):
                     repository,
                     repository(self.entities[idx], sql_connector)
                 )
-            else:
+            elif issubclass(repository, RedisRepository):
+                redis = Registry().get(Redis)
                 Registry().register(
                     repository,
-                    repository()
+                    repository(
+                        self.entities[idx],
+                        redis
+                    )
                 )
 
     def install_services(self, services):
@@ -43,11 +49,8 @@ class BusinessModule(Module):
 
     def install_periodic_tasks(self, periodic_tasks):
         for periodic_task in periodic_tasks:
-            (Registry().get(Scheduler).register_periodic_task(periodic_task))
-
+            (Registry().get(Scheduler).register_periodic_task(periodic_task()))
 
     def install_tasks(self, tasks):
         for task in tasks:
-            (Registry().get(Scheduler).register_async_task(task))
-
-
+            (Registry().get(Scheduler).register_async_task(task()))

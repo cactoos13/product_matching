@@ -2,7 +2,7 @@ from datetime import datetime
 
 from packages.business.modules.system_task.entities import SystemTask, SystemTaskStatusEnum
 from packages.business.modules.system_task.repositories import SystemTaskSqlRepository
-from packages.core.service.sql_service import SqlService, T
+from packages.core.service.sql_service import SqlService
 
 
 class SystemTaskSqlService(SqlService[SystemTask]):
@@ -16,6 +16,9 @@ class SystemTaskSqlService(SqlService[SystemTask]):
 
     def get_last_sync(self)-> SystemTask | None:
         return self.repository.get_last_sync()
+
+    def get_last_idx(self) -> SystemTask | None:
+        return self.repository.get_last_idx()
 
 
     def save(self, entity: SystemTask):

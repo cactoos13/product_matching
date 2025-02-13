@@ -14,3 +14,14 @@ class SystemTaskSqlRepository(SqlRepository[SystemTask]):
                 SystemTask.status == SystemTaskStatusEnum.DONE,
 
             ).order_by(SystemTask.done_at.desc()).first())
+
+    def get_last_idx(self) -> SystemTask | None:
+        return (
+            self.get_session()
+            .query(SystemTask)
+            .filter(
+                SystemTask.type == SystemTaskTypeEnum.INDEX_ADVERTISEMENTS,
+                SystemTask.status == SystemTaskStatusEnum.DONE
+            ).order_by(SystemTask.created_at.desc()).first()
+        )
+

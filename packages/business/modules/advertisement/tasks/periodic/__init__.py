@@ -1,1 +1,2 @@
 from .advertisement_synchronizer_task import AdvertisementSynchronizerTask
+from .advertisement_indexer_task import AdvertisementIndexerTask
