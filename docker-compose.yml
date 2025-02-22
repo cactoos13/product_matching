@@ -1,37 +1,6 @@
 version: '3.7'
 services:
-  elasticsearch:
-    image: elasticsearch:7.13.4
-    environment:
-      - discovery.type=single-node
-      - install.memory_lock=true
-      - "ES_JAVA_OPTS=-Xms1024m -Xmx1024m"
-      - "xpack.security.enabled=false"
-    volumes:
-      - elastic_data:/usr/share/elasticsearch/data
-    ports:
-      - "9200:9200"
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-      nofile:
-        soft: 65536
-        hard: 65536
-    networks:
-        - elk
-  kibana:
-    image: kibana:7.13.4
-    platform: linux/x86_64
-    container_name: kibana
-    environment:
-      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-    ports:
-      - "5601:5601"
-    depends_on:
-      - elasticsearch
-    networks:
-      - elk
+
   mysql:
     image: artifactory.digikala.com/docker/mysql:8
     volumes:
@@ -42,6 +11,8 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: root
       TZ: Asia/Tehran
+    networks:
+        - backend
   redis:
     image: redis:latest  # Pull the latest Redis image
     container_name: redis-server  # Name the container
@@ -49,15 +20,61 @@ services:
       - "6379:6379"  # Expose Redis on the default port (6379)
     volumes:
       - redis-data:/data  # Persistent volume for Redis data
-    restart: always  # Ensure Redis always restarts if it crashes or the machine reboots
+    restart: always
+    networks:
+        - backend
+  api:
+    build: .
+    container_name: pairfect_api
+    restart: always
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+      - mysql
+    env_file:
+      - .env.docker
+    networks:
+      - backend
+    expose:
+      - "8000:8000"
+    command:
+      - poetry run uvicorn main:app
+  celery_worker:
+    build: .
+    container_name: pairfect_celery_worker
+    restart: always
+    depends_on:
+      - redis
+      - mysql
+    command: poetry run celery -A main:scheduler worker --loglevel=info
+    env_file:
+      - .env.docker
+    networks:
+      - backend
+  celery_beat:
+    build: .
+    container_name: pairfect_celery_beat
+    restart: always
+    depends_on:
+      - redis
+      - mysql
+    command: poetry run celery -A main:scheduler beat --loglevel=info
+    env_file:
+      - .env.docker
+    networks:
+      - backend
+
 
 
 networks:
-  elk:
+#  elk:
+#    driver: bridge
+  backend:
     driver: bridge
 
 volumes:
-    elastic_data: {}
+#    elastic_data: {}
     mysql_data: {}
     mysql_logs: {}
     redis-data: {}
