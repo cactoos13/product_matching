@@ -28,6 +28,7 @@ joblib = "^1.4.2"
 numpy = "^2.2.3"
 scikit-learn = "1.5.2"
 cryptography = "^44.0.1"
+sqlalchemy2-stubs = "^0.0.2a38"
 
 
 [build-system]

@@ -68,8 +68,6 @@ class AdvertisementBatchUpdate:
                     changed_at=ad.changed_at
                 )
             )
-
-
 class AdvertisementBatchUpdateTask(Task):
 
     def __init__(

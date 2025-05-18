@@ -12,7 +12,6 @@ scheduler = Registry().get(Scheduler)
 scheduler = scheduler.get_app()
 
 
-
 app = FastAPI()
 class TextInput(BaseModel):
     text: str

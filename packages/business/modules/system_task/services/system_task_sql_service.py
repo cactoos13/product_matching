@@ -30,4 +30,9 @@ class SystemTaskSqlService(SqlService[SystemTask]):
         task.done_at = datetime.now()
         self.repository.update(task)
 
+    def fail_the_task(self, task: SystemTask):
+        task.status = SystemTaskStatusEnum.FAILED
+        task.done_at = datetime.now()
+        self.repository.update(task)
+
 

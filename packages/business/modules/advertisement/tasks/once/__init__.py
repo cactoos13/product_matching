@@ -1,0 +1,2 @@
+from .advertisement_batch_index_task import AdvertisementBatchIndexTask
+from .advertisement_batch_update_task import AdvertisementBatchUpdateTask

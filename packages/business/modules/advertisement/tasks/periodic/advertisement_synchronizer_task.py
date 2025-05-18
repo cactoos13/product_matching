@@ -1,16 +1,13 @@
 import datetime
 
 from sqlalchemy import text
-
-from packages.business.modules.advertisement.tasks.once.advertisement_batch_update_task import \
-    AdvertisementBatchUpdateTask
+from packages.business.modules.advertisement.tasks.once import AdvertisementBatchUpdateTask
 from packages.business.modules.system_task.entities import SystemTask, SystemTaskStatusEnum, SystemTaskTypeEnum
 from packages.business.modules.system_task.services import SystemTaskSqlService
 from packages.core.registry import Registry
 from packages.core.scheduler import Scheduler
 from packages.core.scheduler.task import PeriodicTask
 from celery.schedules import crontab
-
 from packages.core.sql_connector import SqlConnector
 
 
@@ -19,7 +16,7 @@ class AdvertisementSynchronizerTask(PeriodicTask):
     def get_schedule(self) -> crontab:
         return crontab(
             minute='*/10',
-        )  # every 10 minutes
+        )
 
     def get_name(self) -> str:
         return 'advertisement_synchronizer_task'

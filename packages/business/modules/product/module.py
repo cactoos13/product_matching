@@ -9,5 +9,4 @@ ProductModule = (
     ).add_entity(Product)
     .add_repository(ProductSqlRepository)
     .add_service(ProductSqlService)
-
 )

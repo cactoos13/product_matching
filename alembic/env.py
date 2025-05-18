@@ -77,6 +77,7 @@ def run_migrations_offline() -> None:
         literal_binds=True,
         # include_object=include_object,
         dialect_opts={"paramstyle": "named"},
+        compare_type=True,
     )
 
     with context.begin_transaction():

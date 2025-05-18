@@ -21,22 +21,10 @@ class AdvertisementSqlService(SqlService[Advertisement]):
             self,
             start_date: datetime.datetime,
             end_date: datetime.datetime,
-            page: int,
-            offset: int
+            offset: int,
+            limit: int
     ):
-        return self.repository.get_changed_ads(start_date, end_date, page, offset)
-
-    def get_not_lsh_indexed_ads_count(self) -> int:
-        return self.repository.get_not_lsh_indexed_ads_count()
-
-    def get_not_lsh_indexed_ads(
-            self,
-            limit: int,
-            offset: int
-    ) -> list[Type[Advertisement]]:
-        return self.repository.get_not_lsh_indexed_ads(limit, offset)
+        return self.repository.get_changed_ads(start_date, end_date, offset, limit)
 
 
-    def index_ads(self, ads: [Advertisement]):
-        return self.repository.index_ads_batch(ads)
 

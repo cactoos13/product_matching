@@ -1,13 +1,13 @@
 from datetime import datetime
 
 from celery.schedules import crontab
-
-from packages.business.modules.advertisement.entities import AdvertisementIdx
 from packages.business.modules.advertisement.services import AdvertisementSqlService
 from packages.business.modules.advertisement.services.advertisement_redis_service import AdvertisementRedisService
+from packages.business.modules.advertisement.tasks.once import AdvertisementBatchIndexTask
 from packages.business.modules.system_task.entities import SystemTask, SystemTaskTypeEnum, SystemTaskStatusEnum
 from packages.business.modules.system_task.services import SystemTaskSqlService
 from packages.core.registry import Registry
+from packages.core.scheduler import Scheduler
 from packages.core.scheduler.task import PeriodicTask
 
 
@@ -28,14 +28,27 @@ class AdvertisementIndexerTask(PeriodicTask):
     def get_kwargs(self):
         return ()
 
-    def run(self, *args, **kwargs):
+    async def run(self, *args, **kwargs):
         ad_service = Registry().get(AdvertisementSqlService)
-        not_indexed_count = ad_service.get_not_lsh_indexed_ads_count()
-        print(f"Found {not_indexed_count} ads not indexed yet")
 
+        ad_redis_service = Registry().get(AdvertisementRedisService)
+        last_sync = await ad_redis_service.get_last_sync()
+        if not last_sync:
+            print("Redis storage is wiped out, synchronizing all ads")
+            last_sync = datetime(1970, 1, 1)
+
+        print(f"Last sync was at {last_sync}")
+        now = datetime.now()
+        not_indexed_count = ad_service.get_changed_ads_count(
+            start_date=last_sync,
+            end_date=now
+        )
         if not_indexed_count == 0:
             print("No ads to index")
             return
+
+        print(f"Found {not_indexed_count} ads not indexed yet")
+
 
         sys_task_service = Registry().get(SystemTaskSqlService)
         sys_task = SystemTask(
@@ -45,24 +58,19 @@ class AdvertisementIndexerTask(PeriodicTask):
         )
         sys_task = sys_task_service.save(sys_task)
 
-        print("Indexing ads...")
+        print("Planning to index ads...")
         batch = 100
-        ad_redis_service = Registry().get(AdvertisementRedisService)
+
+        scheduler = Registry().get(Scheduler)
         for i in range(0, 200, batch):
-            ads = ad_service.get_not_lsh_indexed_ads(batch, i)
-            if len(ads) == 0:
-                break
-            ad_indexes = []
-            for ad in ads:
-                title = ad.title
-                description = ad.description
-                text = title
-                ad_indexes.append(AdvertisementIdx(ad.id, text))
-            print(f"Indexing {len(ads)} ads")
-            ad_redis_service.index_ads(ad_indexes)
-            ad_service.index_ads(ads)
-            print(f"Indexed {len(ads)} ads")
-        sys_task.status = SystemTaskStatusEnum.DONE
-        sys_task.done_at = datetime.now()
-        sys_task_service.update(sys_task)
-        print("Done indexing ads")
+            print(f"Planning to Index ads from {i} to {i + batch}")
+            task = AdvertisementBatchIndexTask(
+                offset=i,
+                limit=batch,
+                start=last_sync,
+                end=now,
+                parent_task_id=sys_task.id
+            )
+            scheduler.run_task(task)
+        sys_task_service.done_the_task(sys_task)
+        print("Planning to index ads... Done")
