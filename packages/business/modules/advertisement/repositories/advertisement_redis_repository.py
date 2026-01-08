@@ -230,6 +230,26 @@ class AdvertisementRedisRepository(RedisRepository[AdvertisementIdx]):
         Returns:
             List of product IDs sorted by similarity (highest first)
         """
+        results = self.query_with_scores(text, limit=limit, min_similarity=min_similarity)
+        return [product_id for product_id, _ in results]
+    
+    def query_with_scores(self, text: str, limit: int = 10, min_similarity: float = 0.0) -> List[Tuple[int, float]]:
+        """
+        Find similar products using LSH + ParsBERT embeddings + cosine similarity.
+        Returns products with their similarity scores.
+        
+        Process:
+        1. Use LSH to find candidate products (fast)
+        2. Rank candidates using ParsBERT embeddings + cosine similarity (accurate)
+        
+        Args:
+            text: Query text to search for
+            limit: Maximum number of products to return
+            min_similarity: Minimum similarity threshold (0.0 to 1.0)
+        
+        Returns:
+            List of tuples: (product_id, similarity_score) sorted by similarity (highest first)
+        """
         # Step 1: Use LSH to find candidates (fast)
         query_tokens = self._tokenize(text)
         query_minhash = self._create_minhash_from_tokens(query_tokens)
@@ -264,8 +284,8 @@ class AdvertisementRedisRepository(RedisRepository[AdvertisementIdx]):
         # Sort by cosine similarity (highest first)
         similarities.sort(key=lambda x: x[1], reverse=True)
         
-        # Return top N product IDs
-        return [product_id for product_id, _ in similarities[:limit]]
+        # Return top N with scores
+        return similarities[:limit]
 
     def save(self, entity: AdvertisementIdx):
         """

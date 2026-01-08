@@ -70,9 +70,10 @@ The **Entity Matching Project** is a high-performance, scalable system designed 
 ### Component Overview
 
 1. **FastAPI Application** (`main.py`)
-   - RESTful API endpoints
-   - Health checks
-   - Request handling
+   - Main endpoint: `/find` - Find similar products with similarity scores
+   - Batch endpoint: `/find/batch` - Process multiple advertisements
+   - Health checks: `/health` and `/ping`
+   - Request/response validation with Pydantic models
 
 2. **Redis Repository** (`AdvertisementRedisRepository`)
    - Stores ParsBERT embeddings
@@ -108,7 +109,7 @@ The **Entity Matching Project** is a high-performance, scalable system designed 
    ↓
 6. Query API (/find)
    ↓
-7. Results (product IDs)
+7. Results (products with similarity scores)
 ```
 
 ---
@@ -138,9 +139,10 @@ The **Entity Matching Project** is a high-performance, scalable system designed 
 - Background processing with Celery
 
 ✅ **RESTful API**
-- `/find` - Similarity search
+- `/find` - Find similar products for an advertisement (returns products with similarity scores)
+- `/find/batch` - Batch processing for multiple advertisements
 - `/health` - System health checks
-- `/redis/inspect` - Redis inspection
+- `/ping` - Simple ping endpoint
 
 ✅ **Scalability**
 - Horizontal scaling support
@@ -402,7 +404,7 @@ service.index_ads(ads, batch_size=32)
 #### 2. Search for Similar Products
 
 ```python
-# Query for similar products
+# Query for similar products (returns IDs only)
 similar_ids = service.query(
     text="iPhone 14 Pro",
     limit=10,
@@ -410,15 +412,39 @@ similar_ids = service.query(
 )
 
 print(f"Found {len(similar_ids)} similar products: {similar_ids}")
+
+# Query with similarity scores
+similar_products_with_scores = service.query_with_scores(
+    text="iPhone 14 Pro",
+    limit=10,
+    min_similarity=0.5
+)
+
+for product_id, similarity_score in similar_products_with_scores:
+    print(f"Product {product_id}: {similarity_score:.4f}")
 ```
 
 #### 3. Using the API
 
 ```bash
-# Find similar products
+# Find similar products (returns products with similarity scores)
 curl -X POST "http://localhost:8000/find" \
   -H "Content-Type: application/json" \
-  -d '{"text": "iPhone 14 Pro Max"}'
+  -d '{
+    "text": "iPhone 14 Pro Max 256GB",
+    "limit": 10,
+    "min_similarity": 0.5
+  }'
+
+# Batch processing
+curl -X POST "http://localhost:8000/find/batch" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "advertisements": [
+      "iPhone 14 Pro Max",
+      "Samsung Galaxy S23 Ultra"
+    ]
+  }'
 ```
 
 ### Advanced Usage
@@ -457,59 +483,133 @@ http://localhost:8000
 
 ### Endpoints
 
-#### 1. POST `/find`
+#### 1. POST `/find` ⭐ Main Endpoint
 
-Find similar products using ParsBERT embeddings and LSH.
+Find similar products for an advertisement using ParsBERT embeddings, LSH, and cosine similarity.
 
 **Request:**
 ```json
 {
-  "text": "iPhone 14 Pro Max 256GB"
+  "text": "iPhone 14 Pro Max 256GB Space Black",
+  "limit": 10,
+  "min_similarity": 0.5
 }
 ```
 
+**Request Parameters:**
+- `text` (string, required): Advertisement text to match against products (min length: 1)
+- `limit` (integer, optional): Maximum number of products to return (default: 10, range: 1-100)
+- `min_similarity` (float, optional): Minimum similarity threshold (default: 0.0, range: 0.0-1.0)
+
 **Response:**
 ```json
-[123, 456, 789, ...]
+{
+  "query_text": "iPhone 14 Pro Max 256GB Space Black",
+  "matches": [
+    {
+      "product_id": 123,
+      "title": "iPhone 14 Pro Max 256GB",
+      "description": "Apple iPhone 14 Pro Max with 256GB storage...",
+      "similarity_score": 0.9234
+    },
+    {
+      "product_id": 456,
+      "title": "iPhone 14 Pro 256GB",
+      "description": "Apple iPhone 14 Pro with 256GB storage...",
+      "similarity_score": 0.8567
+    }
+  ],
+  "total_matches": 2
+}
 ```
 
-**Parameters:**
-- `text` (string, required): Search query text
+**Response Fields:**
+- `query_text`: The advertisement text that was searched
+- `matches`: List of matched products with similarity scores (sorted by similarity, highest first)
+  - `product_id`: Product ID
+  - `title`: Product title
+  - `description`: Product description (may be null)
+  - `similarity_score`: Similarity score between 0.0 and 1.0 (higher = more similar)
+- `total_matches`: Total number of matches found
 
 **Example:**
 ```bash
 curl -X POST "http://localhost:8000/find" \
   -H "Content-Type: application/json" \
-  -d '{"text": "iPhone 14 Pro"}'
+  -d '{
+    "text": "iPhone 14 Pro Max",
+    "limit": 10,
+    "min_similarity": 0.5
+  }'
 ```
 
-#### 2. POST `/hash`
+**How It Works:**
+1. Tokenizes the advertisement text
+2. Uses LSH to quickly find candidate products (fast approximate search)
+3. Generates ParsBERT embedding for the query
+4. Calculates cosine similarity for each candidate
+5. Ranks and filters results based on similarity threshold
+6. Retrieves product details from database
+7. Returns products with similarity scores
 
-Generate MinHash for input text(s).
+#### 2. POST `/find/batch`
+
+Find similar products for multiple advertisements in batch.
 
 **Request:**
 ```json
 {
-  "text": "iPhone 14 Pro",
-  "text2": "Samsung Galaxy S23"  // optional
+  "advertisements": [
+    "iPhone 14 Pro Max 256GB",
+    "Samsung Galaxy S23 Ultra 512GB",
+    "Google Pixel 7 Pro"
+  ]
 }
 ```
 
+**Request Parameters:**
+- `advertisements` (array, required): List of advertisement texts (min: 1, max: 100)
+
 **Response:**
 ```json
-[
-  {
-    "hashvalues": [1234, 5678, ...],
-    "num_perm": 128,
-    "similar_ads": [1, 2, 3, ...],
-    "digest": "abc123..."
-  }
-]
+{
+  "results": [
+    {
+      "query_text": "iPhone 14 Pro Max 256GB",
+      "matches": [...],
+      "total_matches": 5
+    },
+    {
+      "query_text": "Samsung Galaxy S23 Ultra 512GB",
+      "matches": [...],
+      "total_matches": 3
+    },
+    {
+      "query_text": "Google Pixel 7 Pro",
+      "matches": [...],
+      "total_matches": 2
+    }
+  ]
+}
 ```
+
+**Example:**
+```bash
+curl -X POST "http://localhost:8000/find/batch" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "advertisements": [
+      "iPhone 14 Pro Max",
+      "Samsung Galaxy S23 Ultra"
+    ]
+  }'
+```
+
+**Note:** Batch endpoint uses default `limit=10` and `min_similarity=0.0` for each advertisement.
 
 #### 3. GET `/health`
 
-Check system health status.
+Check the health status of the system.
 
 **Response:**
 ```json
@@ -517,49 +617,36 @@ Check system health status.
   "status": "ok",
   "redis": true,
   "source_db": true,
-  "dest_db": true,
-  "advertisement": {...},
-  "c2c_advertisement": {...}
+  "dest_db": true
 }
 ```
 
-#### 4. GET `/redis/inspect`
+**Response Fields:**
+- `status`: Overall system status (`"ok"` or `"degraded"`)
+- `redis`: Redis connection status
+- `source_db`: Source database connection status
+- `dest_db`: Destination database connection status
 
-Inspect Redis data.
+**Example:**
+```bash
+curl http://localhost:8000/health
+```
 
-**Query Parameters:**
-- `limit` (int, optional): Maximum keys to show (default: 20)
+#### 4. GET `/ping`
+
+Simple ping endpoint to check if the API is running.
 
 **Response:**
 ```json
 {
-  "total_keys": 1000,
-  "advertisement_keys": {
-    "count": 500,
-    "sample_keys": [...],
-    "sample_values": {...}
-  },
-  "lsh_keys": {
-    "count": 500,
-    "sample_keys": [...]
-  },
-  "other_keys": {
-    "count": 0,
-    "keys": [],
-    "values": {}
-  }
+  "status": "ok",
+  "message": "pong"
 }
 ```
 
-#### 5. GET `/ping`
-
-Simple ping endpoint.
-
-**Response:**
-```json
-{
-  "ping": "pong"
-}
+**Example:**
+```bash
+curl http://localhost:8000/ping
 ```
 
 ---
@@ -1042,14 +1129,23 @@ df -h
 - No items indexed yet
 - LSH threshold too high
 - MinHash mismatch
+- `min_similarity` threshold too high
 
 **Solution**:
 ```bash
-# Check if items are indexed
-curl http://localhost:8000/redis/inspect
+# Check health status
+curl http://localhost:8000/health
 
 # Lower LSH threshold
 export LSH_SIMILARITY_THRESHOLD=0.2
+
+# Try with lower min_similarity in API request
+curl -X POST "http://localhost:8000/find" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "your query",
+    "min_similarity": 0.0
+  }'
 
 # Re-index items
 ```
@@ -1082,13 +1178,11 @@ logging.basicConfig(level=logging.DEBUG)
 # Using script
 poetry run python inspect_redis.py
 
-# Using API
-curl http://localhost:8000/redis/inspect?limit=100
-
 # Using Redis CLI
 redis-cli
 > KEYS *
 > GET ads_embedding_123
+> GET ads_text_123
 ```
 
 #### Check Health Status
@@ -1146,4 +1240,45 @@ For issues, questions, or contributions, please open an issue on GitHub.
 ---
 
 **Last Updated**: 2024
-**Version**: 0.1.0
+**Version**: 1.0.0
+
+---
+
+## API Quick Reference
+
+### Main Endpoint: POST `/find`
+
+**Purpose**: Find similar products for an advertisement text
+
+**Request:**
+```json
+{
+  "text": "iPhone 14 Pro Max 256GB",
+  "limit": 10,
+  "min_similarity": 0.5
+}
+```
+
+**Response:**
+```json
+{
+  "query_text": "iPhone 14 Pro Max 256GB",
+  "matches": [
+    {
+      "product_id": 123,
+      "title": "iPhone 14 Pro Max 256GB",
+      "description": "...",
+      "similarity_score": 0.9234
+    }
+  ],
+  "total_matches": 1
+}
+```
+
+**Key Features:**
+- ✅ Returns products with similarity scores (0.0 to 1.0)
+- ✅ Includes product details (id, title, description)
+- ✅ Sorted by similarity (highest first)
+- ✅ Configurable limit and minimum similarity threshold
+- ✅ Fast LSH-based candidate retrieval
+- ✅ Accurate ParsBERT + cosine similarity ranking
